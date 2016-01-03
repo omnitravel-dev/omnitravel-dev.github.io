@@ -125,10 +125,40 @@
 			
 			function findHotels()
 			{
+				var nearbyHotels = [];
+				var nearbyHotelsLat = [];
+				var nearbyHotelsLong = [];
+
 				var geocoder = new google.maps.Geocoder();
 				var cityAddress = document.getElementById('locations_cityField').value;
 				
 				var cityCoordinates = geocodeAddress(geocoder, cityAddress);
+
+
+				//use google maps api to find nearby hotels in a 400m radius
+				$.ajax({
+                  url: "https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=" + cityCoordinates + "&radius=400&type=lodging&key=[removed]",
+          
+                  dataType: "text",
+                  success: function(data) {
+                
+                      var json = $.parseJSON(data);
+                      
+
+                      var hotelsList = json.results;
+
+                      var index;
+                      for(index = 0; index < hotelsList.length; index++) 
+                      {
+					  		nearbyHotels.push(hotelsList[index].name);
+					  		nearbyHotelsLat.push(hotelsList[index].geometry.location.lat);
+					  		nearbyHotelsLong.push(hotelsList[index].geometry.location.lng);
+					  } 
+
+                  }
+      			});
+
+      			
 			}
 			
 			function initSearchButtonListener()
