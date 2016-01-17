@@ -122,7 +122,7 @@
 	</div>
 		
 		<script>
-			
+			var cityCoordinates;
 			function findHotels()
 			{
 				var nearbyHotels = [];
@@ -132,32 +132,24 @@
 				var geocoder = new google.maps.Geocoder();
 				var cityAddress = document.getElementById('locations_cityField').value;
 				
-				var cityCoordinates = geocodeAddress(geocoder, cityAddress);
+				geocodeAddress(geocoder, cityAddress);
+				
+				setTimeout(function(){
+					console.log("City coordinates (geocoded): " + cityCoordinates);
+						
 
-
-				//use google maps api to find nearby hotels in a 400m radius
-				$.ajax({
-		                  url: "https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=" + cityCoordinates + "&radius=400&type=lodging&key=[removed]",
-		          
-		                  dataType: "text",
-		                  success: function(data) {
-		                
-		                      var json = $.parseJSON(data);
-		                      
-		
-		                      var hotelsList = json.results;
-		
-		                      var index;
-		                      for(index = 0; index < hotelsList.length; index++) 
-		                      {
-							  		nearbyHotels.push(hotelsList[index].name);
-							  		nearbyHotelsLat.push(hotelsList[index].geometry.location.lat);
-							  		nearbyHotelsLong.push(hotelsList[index].geometry.location.lng);
-					} 
-
-		                  }
-      			});
-
+					//use google maps api to find nearby hotels in a 400m radius
+					var apiData;
+						
+					$.getJSON('https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=' + cityCoordinates + '&radius=400&type=lodging&key=[removed]', function(data){
+						apiData = data.contents;
+						console.log("data contents: " + data.contents);
+					});
+						
+					console.log("API data: " + apiData);
+				
+				}, 5000);
+							
       			
 			}
 			
@@ -172,10 +164,16 @@
 			
 			
 			function geocodeAddress(geocoder, address) {
-			  
+				console.log("address " + address);
+				console.log("geocoder " + geocoder);
 			  geocoder.geocode({'address': address}, function(results, status) {
 				if (status === google.maps.GeocoderStatus.OK) {
-				  return results[0].geometry.location.toString();
+					var coords = results[0].geometry.location.toString();
+					
+					var coordsNoFirst = coords.substring(1);
+					var coordsNoLast = coordsNoFirst.slice(0, -1);
+					cityCoordinates = coordsNoLast;
+					console.log(cityCoordinates);
 					
 				} else {
 				  alert('Could not convert your city address to latitude/longitude for the google maps API: ' + status);
@@ -189,7 +187,7 @@
 
 		</script>
 		
-		<script src="https://maps.googleapis.com/maps/api/js?key=[removed]&signed_in=true&libraries=places&callback=initGeocoder"
+		<script src="https://maps.googleapis.com/maps/api/js?key=[removed]&signed_in=true&libraries=places&callback=initSearchButtonListener"
 		        async defer></script>
 
 
