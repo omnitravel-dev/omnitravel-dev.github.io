@@ -1,8 +1,7 @@
-<html>
-<!-- Peter Wu | peterwu314 on github-->
-<!-- Bharath Hegde | Pacnet-Netty on github -->
+
 
 <html lang="en">
+
 	<head>
 	<link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
 	<link rel="icon" href="/favicon.ico" type="image/x-icon">
@@ -16,7 +15,119 @@
 	<link href='https://fonts.googleapis.com/css?family=Open+Sans:400,300,700' rel='stylesheet' type='text/css'> <!-- Open Sans -->
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
 	
+	<script>
+			
+			var map;
+			var infowindow;
 
+			function initMap() {
+			 var pyrmont = {lat: -33.867, lng: 151.195};
+
+			  map = new google.maps.Map(document.getElementById('map'), {
+				center: pyrmont,
+				zoom: 15
+			  });
+
+
+			  infowindow = new google.maps.InfoWindow();
+
+			}
+
+			
+
+			function createMarker(place) {
+			  var placeLoc = place.geometry.location;
+			  var marker = new google.maps.Marker({
+				map: map,
+				position: place.geometry.location
+			  });
+
+			  google.maps.event.addListener(marker, 'click', function() {
+				infowindow.setContent(place.name);
+				infowindow.open(map, this);
+			  });
+			}
+			
+			var cityCoordinates;
+			var cityCoordinatesLatLng;
+			function findHotels()
+			{
+				var nearbyHotels = [];
+				var nearbyHotelsLat = [];
+				var nearbyHotelsLong = [];
+
+				var geocoder = new google.maps.Geocoder();
+				var cityAddress = document.getElementById('locations_cityField').value;
+				var radiusSearch = parseInt(document.getElementById('locations_rangeField').value);
+				
+				geocodeAddress(geocoder, cityAddress);
+				setTimeout(function(){
+					var coordSplit = cityCoordinates.split(",");
+				
+					var lati = parseFloat(coordSplit[0]);
+					var lngi = parseFloat(coordSplit[1]);
+					
+					var city = {lat: lati, lng: lngi};
+					
+					var service = new google.maps.places.PlacesService(map);
+					  service.nearbySearch({
+						location: city,
+						radius: radiusSearch,
+						types: ['lodging']
+					  }, callback);
+					  
+					  
+					
+				}, 5000);
+				
+							
+      			
+			}
+			
+			function callback(results, status) {
+			  if (status === google.maps.places.PlacesServiceStatus.OK) {
+				for (var i = 0; i < results.length; i++) {
+				  console.log(results[i]);
+				  createMarker(results[i]);
+				}
+			  }
+			}
+			
+			function initSearchButtonListener()
+			{
+				
+				
+				document.getElementById('button_searchhotels').addEventListener('click', function() {
+					findHotels();
+				  });
+				  
+				initMap();
+			}
+			
+			
+			function geocodeAddress(geocoder, address) {
+				console.log("address " + address);
+				console.log("geocoder " + geocoder);
+			  geocoder.geocode({'address': address}, function(results, status) {
+				if (status === google.maps.GeocoderStatus.OK) {
+					var coords = results[0].geometry.location.toString();
+					map.setCenter(results[0].geometry.location);
+					var coordsNoFirst = coords.substring(1);
+					var coordsNoLast = coordsNoFirst.slice(0, -1);
+					cityCoordinates = coordsNoLast;
+					console.log(cityCoordinates);
+					
+				} else {
+				  alert('Could not convert your city address to latitude/longitude for the google maps API: ' + status);
+				}
+			  });
+			}
+		
+			
+			
+			
+
+		</script>
 
 	</head>
 
@@ -73,30 +184,17 @@
 		     	 
 		    	</div>
 		    	<br></br>
+				<div class="row">
 					<div id="locationField">
 			      		<input type="text" class="form-control" id="locations_cityField" placeholder="Enter a city" type="text" />
 			    	</div>
-
-				    <div id="controls">
-				      <select id="country">
-				        <option value="all">All</option>
-				        <option value="au">Australia</option>
-				        <option value="br">Brazil</option>
-				        <option value="ca">Canada</option>
-				        <option value="fr">France</option>
-				        <option value="de">Germany</option>
-				        <option value="mx">Mexico</option>
-				        <option value="nz">New Zealand</option>
-				        <option value="it">Italy</option>
-				        <option value="za">South Africa</option>
-				        <option value="es">Spain</option>
-				        <option value="pt">Portugal</option>
-				        <option value="us" selected>U.S.A.</option>
-				        <option value="uk">United Kingdom</option>
-				      </select>
-				    </div>
-
-				    
+					<div id="rangeField">
+			      		<input type="text" class="form-control" id="locations_rangeField" placeholder="Enter a search radius in meters (from the city center)" type="text" />
+			    	</div>
+				</div>
+				<div style="text-align:center">
+					<div id="map" style="width: 800px; height: 400px;"></div>    
+				</div>
 		    	<button id="button_searchhotels" class="btn btn-success btn-lg">Search</button>
 	  		
 		</div>
@@ -117,75 +215,10 @@
 	
 	<div class="navbar navbar-inverse navbar-fixed-bottom">
 		<div class="container">
-			<p class="navbar-text">Made by Bharath Hegde (<a target="_blank" href="https://github.com/Pacnet-Netty">Pacnet-Netty</a>) and Peter Wu (<a target="_blank" href="https://github.com/peterwu314">peterwu314</a>)</p>
-		</div>
+				</div>
 	</div>
 		
-		<script>
-			var cityCoordinates;
-			function findHotels()
-			{
-				var nearbyHotels = [];
-				var nearbyHotelsLat = [];
-				var nearbyHotelsLong = [];
-
-				var geocoder = new google.maps.Geocoder();
-				var cityAddress = document.getElementById('locations_cityField').value;
-				
-				geocodeAddress(geocoder, cityAddress);
-				
-				setTimeout(function(){
-					console.log("City coordinates (geocoded): " + cityCoordinates);
-						
-
-					//use google maps api to find nearby hotels in a 400m radius
-					var apiData;
-						
-					$.getJSON('https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=' + cityCoordinates + '&radius=400&type=lodging&key=[removed]', function(data){
-						apiData = data.contents;
-						console.log("data contents: " + data.contents);
-					});
-						
-					console.log("API data: " + apiData);
-				
-				}, 5000);
-							
-      			
-			}
-			
-			function initSearchButtonListener()
-			{
-				
-				
-				document.getElementById('button_searchhotels').addEventListener('click', function() {
-					findHotels();
-				  });
-			}
-			
-			
-			function geocodeAddress(geocoder, address) {
-				console.log("address " + address);
-				console.log("geocoder " + geocoder);
-			  geocoder.geocode({'address': address}, function(results, status) {
-				if (status === google.maps.GeocoderStatus.OK) {
-					var coords = results[0].geometry.location.toString();
-					
-					var coordsNoFirst = coords.substring(1);
-					var coordsNoLast = coordsNoFirst.slice(0, -1);
-					cityCoordinates = coordsNoLast;
-					console.log(cityCoordinates);
-					
-				} else {
-				  alert('Could not convert your city address to latitude/longitude for the google maps API: ' + status);
-				}
-			  });
-			}
 		
-			
-			
-			
-
-		</script>
 		
 		<script src="https://maps.googleapis.com/maps/api/js?key=[removed]&signed_in=true&libraries=places&callback=initSearchButtonListener"
 		        async defer></script>
